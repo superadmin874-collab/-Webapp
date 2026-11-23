@@ -1,0 +1,689 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Core Primitives ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function isValidEmailId(id) {
+      return id is string && id.size() >= 3 && id.size() <= 254 && id.matches('^[a-zA-Z0-9._%+\\-@]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function hasVerifiedEmail() {
+      return isSignedIn() &&
+             'email' in request.auth.token &&
+             'email_verified' in request.auth.token &&
+             request.auth.token.email_verified == true &&
+             request.auth.token.email is string;
+    }
+    function isBootstrappedSuperAdmin() {
+      return hasVerifiedEmail() &&
+             request.auth.token.email.lower() == 'superadmin874@gmail.com';
+    }
+    function adminDocExists() {
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function adminDoc() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+    function isAdmin() {
+      return isBootstrappedSuperAdmin() ||
+             (isSignedIn() && adminDocExists() && adminDoc().active == true);
+    }
+    function isSuperAdmin() {
+      return isBootstrappedSuperAdmin() ||
+             (isAdmin() && adminDoc().role == 'SUPER_ADMIN');
+    }
+    function hasPermission(perm) {
+      return isSuperAdmin() || (isAdmin() && perm in adminDoc().permissions);
+    }
+    function isValidTimestamp(ts) {
+      return ts is timestamp && ts <= request.time;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // --- Entity Validation Helpers ---
+
+    function isValidAdminUser(data) {
+      return data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() >= 3 && data.email.size() <= 254 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.role in ['SUPER_ADMIN', 'ADMIN', 'MODERATOR'] &&
+             data.active is bool &&
+             data.permissions is list && data.permissions.size() <= 16 &&
+             (data.permissions.size() == 0 || data.permissions[0] is string) &&
+             (!('lastLoginAt' in data) || isValidTimestamp(data.lastLoginAt)) &&
+             data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidAdminInvite(data) {
+      return data.email is string && data.email.size() >= 3 && data.email.size() <= 254 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.role in ['ADMIN', 'MODERATOR'] &&
+             data.active is bool &&
+             data.permissions is list && data.permissions.size() <= 16 &&
+             (data.permissions.size() == 0 || data.permissions[0] is string) &&
+             data.invitedByUid is string && data.invitedByUid.size() >= 1 && data.invitedByUid.size() <= 128 &&
+             (!('claimedByUid' in data) || (data.claimedByUid is string && data.claimedByUid.size() <= 128)) &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidSubject(data) {
+      return data.titleEn is string && data.titleEn.size() >= 1 && data.titleEn.size() <= 60 &&
+             data.titleBn is string && data.titleBn.size() >= 1 && data.titleBn.size() <= 60 &&
+             data.description is string && data.description.size() <= 300 &&
+             data.orderIndex is int && data.orderIndex >= 0 && data.orderIndex <= 50 &&
+             data.visible is bool &&
+             data.accentHex is string && data.accentHex.size() >= 4 && data.accentHex.size() <= 12 &&
+             data.iconKey is string && data.iconKey.size() >= 1 && data.iconKey.size() <= 40 &&
+             data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidCategory(data) {
+      return data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+             data.nameBn is string && data.nameBn.size() <= 80 &&
+             data.description is string && data.description.size() <= 240 &&
+             data.orderIndex is int && data.orderIndex >= 0 && data.orderIndex <= 100 &&
+             data.visible is bool &&
+             data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidStudyDocument(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+             data.description is string && data.description.size() <= 1000 &&
+             data.subjectId is string && data.subjectId.size() >= 1 && data.subjectId.size() <= 64 &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 80 &&
+             data.categoryId is string && data.categoryId.size() >= 1 && data.categoryId.size() <= 64 &&
+             data.categoryName is string && data.categoryName.size() >= 1 && data.categoryName.size() <= 80 &&
+             data.chapter is string && data.chapter.size() >= 1 && data.chapter.size() <= 120 &&
+             data.tags is list && data.tags.size() <= 12 &&
+             (data.tags.size() == 0 || data.tags[0] is string) &&
+             data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 200 &&
+             data.fileType is string && data.fileType.size() >= 1 && data.fileType.size() <= 20 &&
+             data.mimeType is string && data.mimeType.size() >= 1 && data.mimeType.size() <= 120 &&
+             data.fileSizeBytes is int && data.fileSizeBytes >= 0 && data.fileSizeBytes <= 20971520 &&
+             data.chunkCount is int && data.chunkCount >= 0 && data.chunkCount <= 50 &&
+             (!('externalUrl' in data) || (data.externalUrl is string && data.externalUrl.size() <= 1000)) &&
+             data.published is bool &&
+             data.featured is bool &&
+             data.version is int && data.version >= 1 &&
+             data.downloadCount is int && data.downloadCount >= 0 &&
+             data.uploadedByUid is string && data.uploadedByUid.size() >= 1 && data.uploadedByUid.size() <= 128 &&
+             data.uploadedByName is string && data.uploadedByName.size() >= 1 && data.uploadedByName.size() <= 80 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidDocumentChunk(data) {
+      return data.docId is string && data.docId.size() >= 1 && data.docId.size() <= 128 &&
+             data.index is int && data.index >= 0 && data.index <= 50 &&
+             data.data is string && data.data.size() >= 1 && data.data.size() <= 800000;
+    }
+
+    function isValidDocumentVersion(data) {
+      return data.version is int && data.version >= 1 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+             data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 200 &&
+             data.fileSizeBytes is int && data.fileSizeBytes >= 0 &&
+             data.changeNote is string && data.changeNote.size() <= 300 &&
+             data.editedByUid is string && data.editedByUid.size() >= 1 && data.editedByUid.size() <= 128 &&
+             data.editedByName is string && data.editedByName.size() >= 1 && data.editedByName.size() <= 80 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    function isValidStudentProfile(data) {
+      return data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+             data.studentCode is string && data.studentCode.size() >= 4 && data.studentCode.size() <= 24 &&
+             data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 80 &&
+             data.disabled is bool &&
+             data.downloadsCount is int && data.downloadsCount >= 0 &&
+             data.quizzesTaken is int && data.quizzesTaken >= 0 &&
+             data.totalQuizScore is int && data.totalQuizScore >= 0 &&
+             data.totalQuestionsAnswered is int && data.totalQuestionsAnswered >= 0 &&
+             data.achievements is list && data.achievements.size() <= 30 &&
+             (data.achievements.size() == 0 || data.achievements[0] is string) &&
+             isValidTimestamp(data.lastActiveAt) &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidStudentFavorite(data) {
+      return data.docId is string && data.docId.size() >= 1 && data.docId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+             data.subjectId is string && data.subjectId.size() >= 1 && data.subjectId.size() <= 64 &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 80 &&
+             data.fileType is string && data.fileType.size() >= 1 && data.fileType.size() <= 20 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    function isValidStudentDownload(data) {
+      return data.docId is string && data.docId.size() >= 1 && data.docId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+             data.subjectId is string && data.subjectId.size() >= 1 && data.subjectId.size() <= 64 &&
+             data.subjectName is string && data.subjectName.size() >= 1 && data.subjectName.size() <= 80 &&
+             data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 200 &&
+             data.fileType is string && data.fileType.size() >= 1 && data.fileType.size() <= 20 &&
+             data.fileSizeBytes is int && data.fileSizeBytes >= 0 &&
+             (!('localPath' in data) || (data.localPath is string && data.localPath.size() <= 500)) &&
+             isValidTimestamp(data.downloadedAt);
+    }
+
+    function isValidQuizAttempt(data) {
+      return data.category is string && data.category.size() >= 1 && data.category.size() <= 80 &&
+             data.difficulty in ['EASY', 'MEDIUM', 'HARD'] &&
+             data.mode is string && data.mode.size() >= 1 && data.mode.size() <= 40 &&
+             data.totalQuestions is int && data.totalQuestions >= 1 && data.totalQuestions <= 50 &&
+             data.correctCount is int && data.correctCount >= 0 && data.correctCount <= data.totalQuestions &&
+             data.scorePercent is int && data.scorePercent >= 0 && data.scorePercent <= 100 &&
+             data.durationSeconds is int && data.durationSeconds >= 0 && data.durationSeconds <= 7200 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    function isValidStudentNotificationRead(data) {
+      return data.notifId is string && data.notifId.size() >= 1 && data.notifId.size() <= 128 &&
+             data.read is bool &&
+             isValidTimestamp(data.readAt);
+    }
+
+    function isValidQuizQuestion(data) {
+      return data.category is string && data.category.size() >= 1 && data.category.size() <= 80 &&
+             data.difficulty in ['EASY', 'MEDIUM', 'HARD'] &&
+             data.questionText is string && data.questionText.size() >= 5 && data.questionText.size() <= 600 &&
+             data.options is list && data.options.size() == 4 &&
+             data.options[0] is string && data.options[1] is string &&
+             data.options[2] is string && data.options[3] is string &&
+             data.correctIndex is int && data.correctIndex >= 0 && data.correctIndex <= 3 &&
+             data.explanation is string && data.explanation.size() >= 1 && data.explanation.size() <= 1000 &&
+             data.source is string && data.source.size() <= 200 &&
+             data.factDate is string && data.factDate.size() <= 40 &&
+             data.aiGenerated is bool &&
+             data.verifiedByAdmin is bool &&
+             data.approved is bool &&
+             data.createdByUid is string && data.createdByUid.size() >= 1 && data.createdByUid.size() <= 128 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidLeaderboardEntry(data) {
+      return data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+             data.studentCode is string && data.studentCode.size() >= 4 && data.studentCode.size() <= 24 &&
+             data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 80 &&
+             data.totalScore is int && data.totalScore >= 0 &&
+             data.quizzesTaken is int && data.quizzesTaken >= 0 &&
+             data.bestPercent is int && data.bestPercent >= 0 && data.bestPercent <= 100 &&
+             data.dailyScore is int && data.dailyScore >= 0 &&
+             data.dailyDate is string && data.dailyDate.size() <= 20 &&
+             data.active is bool &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidAnnouncement(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+             data.body is string && data.body.size() >= 1 && data.body.size() <= 2000 &&
+             data.pinned is bool &&
+             data.published is bool &&
+             (!('attachmentDocId' in data) || (data.attachmentDocId is string && data.attachmentDocId.size() <= 128)) &&
+             (!('attachmentName' in data) || (data.attachmentName is string && data.attachmentName.size() <= 200)) &&
+             (!('attachmentType' in data) || (data.attachmentType is string && data.attachmentType.size() <= 20)) &&
+             data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128 &&
+             data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 80 &&
+             data.publishDate is string && data.publishDate.size() <= 40 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidActivityLog(data) {
+      return data.adminUid is string && data.adminUid.size() >= 1 && data.adminUid.size() <= 128 &&
+             data.adminName is string && data.adminName.size() >= 1 && data.adminName.size() <= 80 &&
+             data.adminRole is string && data.adminRole.size() >= 1 && data.adminRole.size() <= 40 &&
+             data.action is string && data.action.size() >= 1 && data.action.size() <= 80 &&
+             data.targetType is string && data.targetType.size() >= 1 && data.targetType.size() <= 60 &&
+             data.targetId is string && data.targetId.size() <= 128 &&
+             data.details is string && data.details.size() <= 500 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    function isValidAppSettings(data) {
+      return data.appName is string && data.appName.size() >= 1 && data.appName.size() <= 40 &&
+             data.tagline is string && data.tagline.size() >= 1 && data.tagline.size() <= 120 &&
+             data.defaultTheme in ['SYSTEM', 'LIGHT', 'DARK'] &&
+             data.maxUploadMb is int && data.maxUploadMb >= 1 && data.maxUploadMb <= 10 &&
+             data.allowStudentQuiz is bool &&
+             data.allowStudentDownloads is bool &&
+             data.notificationsEnabled is bool &&
+             data.announcementsEnabled is bool &&
+             data.maintenanceMode is bool &&
+             data.requireStrictVerification is bool &&
+             data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128 &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidNotification(data) {
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             data.body is string && data.body.size() >= 1 && data.body.size() <= 400 &&
+             data.type in ['DOCUMENT', 'ANNOUNCEMENT', 'QUIZ', 'SYSTEM'] &&
+             data.targetId is string && data.targetId.size() <= 128 &&
+             data.active is bool &&
+             data.createdByUid is string && data.createdByUid.size() >= 1 && data.createdByUid.size() <= 128 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    // --- Collections ---
+
+    match /admins/{adminUid} {
+      allow get: if isValidId(adminUid) && (isOwner(adminUid) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(adminUid) &&
+                       isValidAdminUser(incoming()) &&
+                       incoming().uid == adminUid &&
+                       incoming().keys().hasAll(['uid', 'email', 'displayName', 'role', 'active', 'permissions', 'createdBy', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['uid', 'email', 'displayName', 'role', 'active', 'permissions', 'lastLoginAt', 'createdBy', 'createdAt', 'updatedAt']) &&
+                       (
+                         (isBootstrappedSuperAdmin() && adminUid == request.auth.uid && incoming().role == 'SUPER_ADMIN' && incoming().active == true) ||
+                         (
+                           hasVerifiedEmail() &&
+                           adminUid == request.auth.uid &&
+                           incoming().email.lower() == request.auth.token.email.lower() &&
+                           incoming().role != 'SUPER_ADMIN' &&
+                           exists(/databases/$(database)/documents/admin_invites/$(request.auth.token.email.lower())) &&
+                           get(/databases/$(database)/documents/admin_invites/$(request.auth.token.email.lower())).data.active == true &&
+                           incoming().role == get(/databases/$(database)/documents/admin_invites/$(request.auth.token.email.lower())).data.role
+                         ) ||
+                         (isSuperAdmin() && incoming().role != 'SUPER_ADMIN')
+                       );
+      allow update: if isValidId(adminUid) &&
+                       isValidAdminUser(incoming()) &&
+                       incoming().uid == existing().uid &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().createdBy == existing().createdBy &&
+                       (
+                         (isOwner(adminUid) && isAdmin() &&
+                          incoming().role == existing().role &&
+                          incoming().active == existing().active &&
+                          incoming().permissions == existing().permissions &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'lastLoginAt', 'updatedAt'])) ||
+                         (isSuperAdmin() &&
+                          (existing().role != 'SUPER_ADMIN' || (incoming().role == 'SUPER_ADMIN' && incoming().active == true)) &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role', 'active', 'permissions', 'lastLoginAt', 'updatedAt']))
+                       );
+      allow delete: if isValidId(adminUid) &&
+                       isSuperAdmin() &&
+                       adminUid != request.auth.uid &&
+                       existing().role != 'SUPER_ADMIN';
+    }
+
+    match /admin_invites/{inviteId} {
+      allow get: if isValidEmailId(inviteId) &&
+                    (isSuperAdmin() || isAdmin() || (hasVerifiedEmail() && inviteId == request.auth.token.email.lower()));
+      allow list: if isSuperAdmin();
+      allow create: if isValidEmailId(inviteId) &&
+                       isSuperAdmin() &&
+                       isValidAdminInvite(incoming()) &&
+                       incoming().email.lower() == inviteId &&
+                       incoming().invitedByUid == request.auth.uid &&
+                       incoming().keys().hasAll(['email', 'displayName', 'role', 'active', 'permissions', 'invitedByUid', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['email', 'displayName', 'role', 'active', 'permissions', 'invitedByUid', 'claimedByUid', 'createdAt', 'updatedAt']);
+      allow update: if isValidEmailId(inviteId) &&
+                       isValidAdminInvite(incoming()) &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().email == existing().email &&
+                       (
+                         (isSuperAdmin() &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role', 'active', 'permissions', 'updatedAt'])) ||
+                         (hasVerifiedEmail() &&
+                          inviteId == request.auth.token.email.lower() &&
+                          existing().active == true &&
+                          incoming().claimedByUid == request.auth.uid &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['claimedByUid', 'updatedAt']))
+                       );
+      allow delete: if isValidEmailId(inviteId) && isSuperAdmin();
+    }
+
+    match /subjects/{subjectId} {
+      allow get: if isValidId(subjectId) && isSignedIn() && (existing().visible == true || isAdmin());
+      allow list: if isSignedIn() && (resource.data.visible == true || isAdmin());
+      allow create: if isValidId(subjectId) &&
+                       isAdmin() && hasPermission('manage_subjects') &&
+                       isValidSubject(incoming()) &&
+                       incoming().updatedBy == request.auth.uid &&
+                       incoming().keys().hasAll(['titleEn', 'titleBn', 'description', 'orderIndex', 'visible', 'accentHex', 'iconKey', 'updatedBy', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['titleEn', 'titleBn', 'description', 'orderIndex', 'visible', 'accentHex', 'iconKey', 'updatedBy', 'createdAt', 'updatedAt']);
+      allow update: if isValidId(subjectId) &&
+                       isAdmin() && hasPermission('manage_subjects') &&
+                       isValidSubject(incoming()) &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().updatedBy == request.auth.uid &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['titleEn', 'titleBn', 'description', 'orderIndex', 'visible', 'accentHex', 'iconKey', 'updatedBy', 'updatedAt']);
+      allow delete: if isValidId(subjectId) && isSuperAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow get: if isValidId(categoryId) && isSignedIn() && (existing().visible == true || isAdmin());
+      allow list: if isSignedIn() && (resource.data.visible == true || isAdmin());
+      allow create: if isValidId(categoryId) &&
+                       isAdmin() && hasPermission('manage_categories') &&
+                       isValidCategory(incoming()) &&
+                       incoming().createdBy == request.auth.uid &&
+                       incoming().keys().hasAll(['name', 'nameBn', 'description', 'orderIndex', 'visible', 'createdBy', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['name', 'nameBn', 'description', 'orderIndex', 'visible', 'createdBy', 'createdAt', 'updatedAt']);
+      allow update: if isValidId(categoryId) &&
+                       isAdmin() && hasPermission('manage_categories') &&
+                       isValidCategory(incoming()) &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().createdBy == existing().createdBy &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['name', 'nameBn', 'description', 'orderIndex', 'visible', 'updatedAt']);
+      allow delete: if isValidId(categoryId) && isAdmin() && hasPermission('manage_categories');
+    }
+
+    match /documents/{docId} {
+      allow get: if isValidId(docId) && isSignedIn() && (existing().published == true || isAdmin());
+      allow list: if isSignedIn() && (resource.data.published == true || isAdmin());
+      allow create: if isValidId(docId) &&
+                       isAdmin() && hasPermission('manage_documents') &&
+                       isValidStudyDocument(incoming()) &&
+                       incoming().uploadedByUid == request.auth.uid &&
+                       incoming().version == 1 &&
+                       incoming().downloadCount == 0 &&
+                       incoming().keys().hasAll([
+                         'title', 'description', 'subjectId', 'subjectName', 'categoryId', 'categoryName',
+                         'chapter', 'tags', 'fileName', 'fileType', 'mimeType', 'fileSizeBytes',
+                         'chunkCount', 'published', 'featured', 'version', 'downloadCount',
+                         'uploadedByUid', 'uploadedByName', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'title', 'description', 'subjectId', 'subjectName', 'categoryId', 'categoryName',
+                         'chapter', 'tags', 'fileName', 'fileType', 'mimeType', 'fileSizeBytes',
+                         'chunkCount', 'externalUrl', 'published', 'featured', 'version', 'downloadCount',
+                         'uploadedByUid', 'uploadedByName', 'createdAt', 'updatedAt'
+                       ]);
+      allow update: if isValidId(docId) &&
+                       isSignedIn() &&
+                       isValidStudyDocument(incoming()) &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().uploadedByUid == existing().uploadedByUid &&
+                       (
+                         (isAdmin() && hasPermission('manage_documents') &&
+                          incoming().version >= existing().version &&
+                          incoming().diff(existing()).affectedKeys().hasOnly([
+                            'title', 'description', 'subjectId', 'subjectName', 'categoryId', 'categoryName',
+                            'chapter', 'tags', 'fileName', 'fileType', 'mimeType', 'fileSizeBytes',
+                            'chunkCount', 'externalUrl', 'published', 'featured', 'version', 'updatedAt'
+                          ])) ||
+                         (existing().published == true &&
+                          incoming().downloadCount == existing().downloadCount + 1 &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['downloadCount', 'updatedAt']))
+                       );
+      allow delete: if isValidId(docId) && isAdmin() && hasPermission('manage_documents');
+
+      match /chunks/{chunkId} {
+        allow get: if isValidId(docId) && isValidId(chunkId) && isSignedIn() &&
+                      (get(/databases/$(database)/documents/documents/$(docId)).data.published == true || isAdmin());
+        allow list: if isValidId(docId) && isAdmin();
+        allow create, update: if isValidId(docId) && isValidId(chunkId) &&
+                                 isAdmin() && hasPermission('manage_documents') &&
+                                 isValidDocumentChunk(incoming()) &&
+                                 incoming().docId == docId &&
+                                 incoming().keys().hasAll(['docId', 'index', 'data']) &&
+                                 incoming().keys().hasOnly(['docId', 'index', 'data']);
+        allow delete: if isValidId(docId) && isValidId(chunkId) && isAdmin() && hasPermission('manage_documents');
+      }
+
+      match /versions/{versionId} {
+        allow get, list: if isValidId(docId) && isAdmin();
+        allow create: if isValidId(docId) && isValidId(versionId) &&
+                         isAdmin() && hasPermission('manage_documents') &&
+                         isValidDocumentVersion(incoming()) &&
+                         incoming().editedByUid == request.auth.uid &&
+                         incoming().keys().hasAll(['version', 'title', 'fileName', 'fileSizeBytes', 'changeNote', 'editedByUid', 'editedByName', 'createdAt']) &&
+                         incoming().keys().hasOnly(['version', 'title', 'fileName', 'fileSizeBytes', 'changeNote', 'editedByUid', 'editedByName', 'createdAt']);
+        allow update, delete: if isValidId(docId) && isValidId(versionId) && isAdmin() && hasPermission('manage_documents');
+      }
+    }
+
+    match /students/{studentUid} {
+      allow get: if isValidId(studentUid) && (isOwner(studentUid) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isValidId(studentUid) &&
+                       isOwner(studentUid) &&
+                       isValidStudentProfile(incoming()) &&
+                       incoming().uid == studentUid &&
+                       incoming().disabled == false &&
+                       incoming().downloadsCount == 0 &&
+                       incoming().quizzesTaken == 0 &&
+                       incoming().totalQuizScore == 0 &&
+                       incoming().totalQuestionsAnswered == 0 &&
+                       incoming().keys().hasAll([
+                         'uid', 'studentCode', 'fullName', 'disabled', 'downloadsCount',
+                         'quizzesTaken', 'totalQuizScore', 'totalQuestionsAnswered',
+                         'achievements', 'lastActiveAt', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'uid', 'studentCode', 'fullName', 'disabled', 'downloadsCount',
+                         'quizzesTaken', 'totalQuizScore', 'totalQuestionsAnswered',
+                         'achievements', 'lastActiveAt', 'createdAt', 'updatedAt'
+                       ]);
+      allow update: if isValidId(studentUid) &&
+                       isValidStudentProfile(incoming()) &&
+                       incoming().uid == existing().uid &&
+                       incoming().studentCode == existing().studentCode &&
+                       incoming().createdAt == existing().createdAt &&
+                       (
+                         (isOwner(studentUid) &&
+                          existing().disabled == false &&
+                          incoming().disabled == existing().disabled &&
+                          incoming().diff(existing()).affectedKeys().hasOnly([
+                            'fullName', 'downloadsCount', 'quizzesTaken', 'totalQuizScore',
+                            'totalQuestionsAnswered', 'achievements', 'lastActiveAt', 'updatedAt'
+                          ])) ||
+                         (isAdmin() && hasPermission('manage_students') &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'disabled', 'updatedAt']))
+                       );
+      allow delete: if isValidId(studentUid) && isAdmin() && hasPermission('manage_students');
+
+      match /favorites/{docId} {
+        allow get, list: if isValidId(studentUid) && (isOwner(studentUid) || isAdmin());
+        allow create: if isValidId(studentUid) && isValidId(docId) && isOwner(studentUid) &&
+                         isValidStudentFavorite(incoming()) &&
+                         incoming().docId == docId &&
+                         incoming().keys().hasAll(['docId', 'title', 'subjectId', 'subjectName', 'fileType', 'createdAt']) &&
+                         incoming().keys().hasOnly(['docId', 'title', 'subjectId', 'subjectName', 'fileType', 'createdAt']);
+        allow delete: if isValidId(studentUid) && isValidId(docId) && (isOwner(studentUid) || (isAdmin() && hasPermission('manage_students')));
+      }
+
+      match /downloads/{downloadId} {
+        allow get, list: if isValidId(studentUid) && (isOwner(studentUid) || isAdmin());
+        allow create: if isValidId(studentUid) && isValidId(downloadId) && isOwner(studentUid) &&
+                         isValidStudentDownload(incoming()) &&
+                         incoming().keys().hasAll(['docId', 'title', 'subjectId', 'subjectName', 'fileName', 'fileType', 'fileSizeBytes', 'downloadedAt']) &&
+                         incoming().keys().hasOnly(['docId', 'title', 'subjectId', 'subjectName', 'fileName', 'fileType', 'fileSizeBytes', 'localPath', 'downloadedAt']);
+        allow delete: if isValidId(studentUid) && isValidId(downloadId) && (isOwner(studentUid) || (isAdmin() && hasPermission('manage_students')));
+      }
+
+      match /quiz_attempts/{attemptId} {
+        allow get, list: if isValidId(studentUid) && (isOwner(studentUid) || isAdmin());
+        allow create: if isValidId(studentUid) && isValidId(attemptId) && isOwner(studentUid) &&
+                         isValidQuizAttempt(incoming()) &&
+                         incoming().keys().hasAll(['category', 'difficulty', 'mode', 'totalQuestions', 'correctCount', 'scorePercent', 'durationSeconds', 'createdAt']) &&
+                         incoming().keys().hasOnly(['category', 'difficulty', 'mode', 'totalQuestions', 'correctCount', 'scorePercent', 'durationSeconds', 'createdAt']);
+        allow delete: if isValidId(studentUid) && isValidId(attemptId) && (isOwner(studentUid) || (isAdmin() && hasPermission('manage_students')));
+      }
+
+      match /notifications/{notifId} {
+        allow get, list: if isValidId(studentUid) && (isOwner(studentUid) || isAdmin());
+        allow create, update: if isValidId(studentUid) && isValidId(notifId) && isOwner(studentUid) &&
+                                 isValidStudentNotificationRead(incoming()) &&
+                                 incoming().notifId == notifId &&
+                                 incoming().keys().hasAll(['notifId', 'read', 'readAt']) &&
+                                 incoming().keys().hasOnly(['notifId', 'read', 'readAt']);
+        allow delete: if isValidId(studentUid) && isValidId(notifId) && isOwner(studentUid);
+      }
+    }
+
+    match /quiz_questions/{questionId} {
+      allow get: if isValidId(questionId) && isSignedIn() && (existing().approved == true || isAdmin());
+      allow list: if isSignedIn() && (resource.data.approved == true || isAdmin());
+      allow create: if isValidId(questionId) &&
+                       isAdmin() && hasPermission('manage_quizzes') &&
+                       isValidQuizQuestion(incoming()) &&
+                       incoming().createdByUid == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'category', 'difficulty', 'questionText', 'options', 'correctIndex',
+                         'explanation', 'source', 'factDate', 'aiGenerated', 'verifiedByAdmin',
+                         'approved', 'createdByUid', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'category', 'difficulty', 'questionText', 'options', 'correctIndex',
+                         'explanation', 'source', 'factDate', 'aiGenerated', 'verifiedByAdmin',
+                         'approved', 'createdByUid', 'createdAt', 'updatedAt'
+                       ]);
+      allow update: if isValidId(questionId) &&
+                       isAdmin() && hasPermission('manage_quizzes') &&
+                       isValidQuizQuestion(incoming()) &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().createdByUid == existing().createdByUid &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'category', 'difficulty', 'questionText', 'options', 'correctIndex',
+                         'explanation', 'source', 'factDate', 'verifiedByAdmin', 'approved', 'updatedAt'
+                       ]);
+      allow delete: if isValidId(questionId) && isAdmin() && hasPermission('manage_quizzes');
+    }
+
+    match /leaderboard/{studentUid} {
+      allow get: if isValidId(studentUid) && isSignedIn() && (existing().active == true || isOwner(studentUid) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.active == true || isAdmin());
+      allow create: if isValidId(studentUid) &&
+                       isOwner(studentUid) &&
+                       isValidLeaderboardEntry(incoming()) &&
+                       incoming().uid == studentUid &&
+                       incoming().active == true &&
+                       incoming().keys().hasAll(['uid', 'studentCode', 'fullName', 'totalScore', 'quizzesTaken', 'bestPercent', 'dailyScore', 'dailyDate', 'active', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['uid', 'studentCode', 'fullName', 'totalScore', 'quizzesTaken', 'bestPercent', 'dailyScore', 'dailyDate', 'active', 'updatedAt']);
+      allow update: if isValidId(studentUid) &&
+                       isValidLeaderboardEntry(incoming()) &&
+                       incoming().uid == existing().uid &&
+                       incoming().studentCode == existing().studentCode &&
+                       (
+                         (isOwner(studentUid) &&
+                          incoming().active == existing().active &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'totalScore', 'quizzesTaken', 'bestPercent', 'dailyScore', 'dailyDate', 'updatedAt'])) ||
+                         (isAdmin() && hasPermission('manage_students') &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'active', 'updatedAt']))
+                       );
+      allow delete: if isValidId(studentUid) && isAdmin() && hasPermission('manage_students');
+    }
+
+    match /announcements/{announcementId} {
+      allow get: if isValidId(announcementId) && isSignedIn() && (existing().published == true || isAdmin());
+      allow list: if isSignedIn() && (resource.data.published == true || isAdmin());
+      allow create: if isValidId(announcementId) &&
+                       isAdmin() && hasPermission('manage_announcements') &&
+                       isValidAnnouncement(incoming()) &&
+                       incoming().authorUid == request.auth.uid &&
+                       incoming().keys().hasAll(['title', 'body', 'pinned', 'published', 'authorUid', 'authorName', 'publishDate', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['title', 'body', 'pinned', 'published', 'attachmentDocId', 'attachmentName', 'attachmentType', 'authorUid', 'authorName', 'publishDate', 'createdAt', 'updatedAt']);
+      allow update: if isValidId(announcementId) &&
+                       isAdmin() && hasPermission('manage_announcements') &&
+                       isValidAnnouncement(incoming()) &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().authorUid == existing().authorUid &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'title', 'body', 'pinned', 'published', 'attachmentDocId',
+                         'attachmentName', 'attachmentType', 'publishDate', 'updatedAt'
+                       ]);
+      allow delete: if isValidId(announcementId) && isAdmin() && hasPermission('manage_announcements');
+    }
+
+    match /activity_logs/{logId} {
+      allow get, list: if isAdmin();
+      allow create: if isValidId(logId) &&
+                       isAdmin() &&
+                       isValidActivityLog(incoming()) &&
+                       incoming().adminUid == request.auth.uid &&
+                       incoming().keys().hasAll(['adminUid', 'adminName', 'adminRole', 'action', 'targetType', 'targetId', 'details', 'createdAt']) &&
+                       incoming().keys().hasOnly(['adminUid', 'adminName', 'adminRole', 'action', 'targetType', 'targetId', 'details', 'createdAt']);
+      allow update, delete: if isValidId(logId) && isSuperAdmin();
+    }
+
+    match /app_settings/{settingId} {
+      allow get: if isValidId(settingId) && isSignedIn();
+      allow list: if isAdmin();
+      allow create: if isValidId(settingId) &&
+                       isSuperAdmin() &&
+                       isValidAppSettings(incoming()) &&
+                       incoming().updatedBy == request.auth.uid &&
+                       incoming().keys().hasAll([
+                         'appName', 'tagline', 'defaultTheme', 'maxUploadMb',
+                         'allowStudentQuiz', 'allowStudentDownloads', 'notificationsEnabled',
+                         'announcementsEnabled', 'maintenanceMode', 'requireStrictVerification',
+                         'updatedBy', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'appName', 'tagline', 'defaultTheme', 'maxUploadMb',
+                         'allowStudentQuiz', 'allowStudentDownloads', 'notificationsEnabled',
+                         'announcementsEnabled', 'maintenanceMode', 'requireStrictVerification',
+                         'updatedBy', 'updatedAt'
+                       ]);
+      allow update: if isValidId(settingId) &&
+                       isValidAppSettings(incoming()) &&
+                       incoming().updatedBy == request.auth.uid &&
+                       (
+                         (isSuperAdmin() &&
+                          incoming().diff(existing()).affectedKeys().hasOnly([
+                            'appName', 'tagline', 'defaultTheme', 'maxUploadMb',
+                            'allowStudentQuiz', 'allowStudentDownloads', 'notificationsEnabled',
+                            'announcementsEnabled', 'maintenanceMode', 'requireStrictVerification',
+                            'updatedBy', 'updatedAt'
+                          ])) ||
+                         (isAdmin() && hasPermission('manage_settings') &&
+                          !incoming().diff(existing()).affectedKeys().hasAny(['maintenanceMode', 'requireStrictVerification']) &&
+                          incoming().diff(existing()).affectedKeys().hasOnly([
+                            'appName', 'tagline', 'defaultTheme', 'maxUploadMb',
+                            'allowStudentQuiz', 'allowStudentDownloads', 'notificationsEnabled',
+                            'announcementsEnabled', 'updatedBy', 'updatedAt'
+                          ]))
+                       );
+      allow delete: if false;
+    }
+
+    match /notifications/{notifId} {
+      allow get: if isValidId(notifId) && isSignedIn() && (existing().active == true || isAdmin());
+      allow list: if isSignedIn() && (resource.data.active == true || isAdmin());
+      allow create: if isValidId(notifId) &&
+                       isAdmin() &&
+                       isValidNotification(incoming()) &&
+                       incoming().createdByUid == request.auth.uid &&
+                       incoming().keys().hasAll(['title', 'body', 'type', 'targetId', 'active', 'createdByUid', 'createdAt']) &&
+                       incoming().keys().hasOnly(['title', 'body', 'type', 'targetId', 'active', 'createdByUid', 'createdAt']);
+      allow update: if isValidId(notifId) &&
+                       isAdmin() &&
+                       isValidNotification(incoming()) &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().createdByUid == existing().createdByUid &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['title', 'body', 'type', 'targetId', 'active']);
+      allow delete: if isValidId(notifId) && isAdmin();
+    }
+  }
+}
