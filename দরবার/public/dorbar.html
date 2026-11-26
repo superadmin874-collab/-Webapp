@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>দরবার — Your Digital Learning &amp; Knowledge Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&family=Outfit:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0F172A;
+      --indigo: #4F46E5;
+      --purple: #6D28D9;
+      --gold: #F59E0B;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-alt: #F1F5F9;
+      --text: #0F172A;
+      --text-muted: #475569;
+      --border: #E2E8F0;
+      --success: #059669;
+      --danger: #DC2626;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+    [data-theme="dark"] {
+      --bg: #0B1120;
+      --surface: #131C31;
+      --surface-alt: #1E293B;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #26334D;
+      --shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans Bengali', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .bn { font-family: 'Noto Sans Bengali', 'Plus Jakarta Sans', sans-serif; }
+    .container { max-width: 1120px; margin: 0 auto; padding: 20px 16px 88px; }
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img {
+      width: 52px; height: 52px; border-radius: 14px; object-fit: cover;
+      border: 2px solid rgba(245, 158, 11, 0.55); box-shadow: var(--shadow);
+    }
+    .brand h1 { font-family: 'Noto Sans Bengali', 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 700; }
+    .brand p { font-size: 0.8rem; color: var(--text-muted); }
+    .actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: none; border-radius: 12px; padding: 10px 16px; min-height: 44px;
+      font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: linear-gradient(135deg, var(--indigo), var(--purple)); color: #fff; }
+    .btn-outline { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-gold { background: var(--gold); color: var(--navy); }
+    .btn-danger { background: rgba(220, 38, 38, 0.12); color: var(--danger); }
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 20px; box-shadow: var(--shadow);
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--navy), var(--indigo), var(--purple));
+      color: #fff; border: none; margin-bottom: 20px;
+    }
+    .hero h2 { font-size: 1.4rem; margin-bottom: 6px; }
+    .hero p { opacity: 0.88; font-size: 0.92rem; }
+    .grid { display: grid; gap: 14px; }
+    .grid-subjects { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .grid-stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 18px; }
+    .subject-card {
+      border-radius: 18px; padding: 18px; color: #fff; cursor: pointer;
+      display: flex; flex-direction: column; justify-content: space-between; min-height: 140px;
+      transition: transform 0.16s ease;
+    }
+    .subject-card:hover { transform: translateY(-2px); }
+    .pill {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 600; background: rgba(255,255,255,0.2);
+    }
+    .nav-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .tab-btn {
+      padding: 10px 16px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-weight: 600; cursor: pointer;
+    }
+    .tab-btn.active { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+    .input, select, textarea {
+      width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-family: inherit; font-size: 0.95rem;
+    }
+    .form-row { display: grid; gap: 12px; margin-bottom: 12px; }
+    .doc-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      padding: 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface);
+      margin-bottom: 10px;
+    }
+    .badge {
+      padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+      background: var(--surface-alt); color: var(--indigo);
+    }
+    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    .chip {
+      padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-size: 0.82rem; cursor: pointer;
+    }
+    .chip.selected { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65);
+      display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: 22px; max-width: 680px; width: 100%;
+      max-height: 90vh; overflow-y: auto; padding: 22px; border: 1px solid var(--border);
+    }
+    .hidden { display: none !important; }
+    .quiz-opt {
+      width: 100%; text-align: left; padding: 13px 16px; border-radius: 12px;
+      border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+      margin-bottom: 8px; cursor: pointer; font-weight: 500;
+    }
+    .quiz-opt.correct { border-color: var(--success); background: rgba(5, 150, 105, 0.14); }
+    .quiz-opt.wrong { border-color: var(--danger); background: rgba(220, 38, 38, 0.14); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <img src="assets/aistudio/dorbar_c22910c3.jpg" alt="দরবার Logo" />
+        <div>
+          <h1 class="bn">দরবার</h1>
+          <p>Your Digital Learning &amp; Knowledge Hub</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="themeToggle" class="btn btn-outline" type="button">Dark / Light</button>
+        <button id="workspaceToggle" class="btn btn-outline hidden" type="button">Admin Panel</button>
+        <button id="logoutBtn" class="btn btn-danger hidden" type="button">Log Out</button>
+      </div>
+    </header>
+
+    <!-- Student Name-Only Entry -->
+    <section id="welcomeSection" class="card" style="max-width: 520px; margin: 28px auto;">
+      <div style="text-align: center; margin-bottom: 16px;">
+        <img src="assets/aistudio/dorbar_c22910c3.jpg" alt="দরবার Logo" style="width: 112px; height: 112px; border-radius: 24px; object-fit: cover; margin-bottom: 12px;" />
+        <h2 class="bn" style="font-size: 1.5rem;">স্বাগতম — Welcome to দরবার</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Enter your full name to continue. No email, phone number, or password required.</p>
+      </div>
+      <form id="loginForm">
+        <div class="form-row">
+          <input id="studentNameInput" class="input" type="text" placeholder="Enter your full name (e.g., Ananya Chatterjee)" required minlength="2" />
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" type="submit">Continue to Dashboard</button>
+      </form>
+    </section>
+
+    <!-- Main App Shell -->
+    <main id="appShell" class="hidden">
+      <nav class="nav-tabs" id="studentTabs">
+        <button class="tab-btn active" data-tab="home" type="button">Home</button>
+        <button class="tab-btn" data-tab="subjects" type="button">Subjects</button>
+        <button class="tab-btn" data-tab="quiz" type="button">AI GK Challenge</button>
+        <button class="tab-btn" data-tab="library" type="button">Saved &amp; Downloads</button>
+        <button class="tab-btn" data-tab="profile" type="button">Profile</button>
+      </nav>
+
+      <!-- Student Home -->
+      <section id="tab-home">
+        <div class="card hero">
+          <h2 id="welcomeHeading" class="bn">নমস্কার!</h2>
+          <p id="studentMeta"></p>
+        </div>
+        <div class="form-row">
+          <input id="globalSearch" class="input" type="search" placeholder="Search subjects, chapters, PDFs, notes..." />
+        </div>
+        <div id="searchResultsWrap" class="hidden" style="margin-bottom: 18px;">
+          <h3 style="margin-bottom: 10px;">Search Results</h3>
+          <div id="searchResultsList"></div>
+        </div>
+        <h3 style="margin-bottom: 12px;">Six Subject Libraries</h3>
+        <div id="homeSubjectsGrid" class="grid grid-subjects" style="margin-bottom: 22px;"></div>
+        <div class="card hero" style="background: linear-gradient(135deg, #312E81, #6D28D9); cursor: pointer;" id="bannerQuizBtn">
+          <h2 class="bn">দরবার AI GK CHALLENGE</h2>
+          <p>12 GK Categories • Timed Quizzes • Explanations • Leaderboard</p>
+        </div>
+        <h3 style="margin-bottom: 10px;">Important Announcements</h3>
+        <div id="announcementsList" style="margin-bottom: 20px;"></div>
+        <h3 style="margin-bottom: 10px;">Recently Uploaded Materials</h3>
+        <div id="recentDocsList"></div>
+      </section>
+
+      <!-- Subjects Tab -->
+      <section id="tab-subjects" class="hidden">
+        <div id="subjectsOverview" class="grid grid-subjects"></div>
+        <div id="subjectDetail" class="hidden">
+          <button id="backToSubjectsBtn" class="btn btn-outline" style="margin-bottom: 12px;" type="button">Back to Subjects</button>
+          <div class="card hero" id="subjectHero"></div>
+          <div id="categoryChips" class="chip-row"></div>
+          <div id="subjectDocsList"></div>
+        </div>
+      </section>
+
+      <!-- Quiz Tab -->
+      <section id="tab-quiz" class="hidden">
+        <div id="quizSetupCard" class="card">
+          <h2 class="bn" style="margin-bottom: 8px;">দরবার AI GK CHALLENGE</h2>
+          <p style="color: var(--text-muted); margin-bottom: 14px;">Select category and difficulty to start a timed General Knowledge challenge.</p>
+          <div class="form-row">
+            <select id="quizCategorySelect"></select>
+            <select id="quizDifficultySelect">
+              <option value="EASY">Easy (25s / question)</option>
+              <option value="MEDIUM" selected>Medium (20s / question)</option>
+              <option value="HARD">Hard (15s / question)</option>
+            </select>
+          </div>
+          <button id="startQuizBtn" class="btn btn-primary" type="button">Start GK Quiz</button>
+        </div>
+        <div id="quizArenaCard" class="card hidden"></div>
+      </section>
+
+      <!-- Library Tab -->
+      <section id="tab-library" class="hidden">
+        <div class="card" style="margin-bottom: 16px;">
+          <h3 style="margin-bottom: 10px;">Favourite Materials</h3>
+          <div id="favoritesList"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom: 10px;">Download History</h3>
+          <div id="downloadsList"></div>
+        </div>
+      </section>
+
+      <!-- Profile Tab -->
+      <section id="tab-profile" class="hidden">
+        <div class="card">
+          <h3 style="margin-bottom: 10px;">Student Profile</h3>
+          <p id="profileSummary" style="color: var(--text-muted); margin-bottom: 14px;"></p>
+          <form id="renameForm" class="form-row" style="max-width: 420px;">
+            <input id="renameInput" class="input" type="text" placeholder="Change displayed name" required minlength="2" />
+            <button class="btn btn-primary" type="submit">Update Name</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Admin Control Center -->
+      <section id="adminSection" class="hidden">
+        <div class="card hero">
+          <h2>Admin Control Center</h2>
+          <p>Upload study documents, post announcements, manage subjects &amp; export reports.</p>
+        </div>
+        <div class="grid grid-stats" id="adminStatsGrid"></div>
+        <div class="card" style="margin-bottom: 18px;">
+          <h3 style="margin-bottom: 12px;">Upload Educational Document</h3>
+          <form id="uploadDocForm" class="form-row">
+            <input id="docTitleInput" class="input" type="text" placeholder="Document Title" required />
+            <select id="docSubjectSelect" required></select>
+            <select id="docCategorySelect" required></select>
+            <input id="docChapterInput" class="input" type="text" placeholder="Chapter (e.g., Chapter 1)" value="Chapter 1" required />
+            <textarea id="docDescInput" rows="2" placeholder="Short description..."></textarea>
+            <input id="docFileInput" class="input" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv" required />
+            <button class="btn btn-primary" type="submit">Upload &amp; Publish</button>
+          </form>
+        </div>
+        <div class="card" style="margin-bottom: 18px;">
+          <h3 style="margin-bottom: 12px;">Post Announcement</h3>
+          <form id="announcementForm" class="form-row">
+            <input id="annTitleInput" class="input" type="text" placeholder="Announcement Title" required />
+            <textarea id="annBodyInput" rows="2" placeholder="Announcement details..." required></textarea>
+            <button class="btn btn-gold" type="submit">Publish Announcement</button>
+          </form>
+        </div>
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+            <h3>Manage Documents</h3>
+            <button id="exportCsvBtn" class="btn btn-outline" type="button">Export Analytics CSV</button>
+          </div>
+          <div id="adminDocsList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Document Preview Modal -->
+  <div id="viewerModal" class="modal-backdrop">
+    <div class="modal">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px;">
+        <h3 id="viewerTitle"></h3>
+        <button id="closeViewerBtn" class="btn btn-outline" type="button">Close</button>
+      </div>
+      <p id="viewerMeta" style="color: var(--text-muted); font-size: 0.86rem; margin-bottom: 12px;"></p>
+      <div id="viewerBody" style="margin-bottom: 14px;"></div>
+      <button id="viewerDownloadBtn" class="btn btn-primary" type="button">Download File</button>
+    </div>
+  </div>
+
+  <script>
+    const SUBJECTS = [
+      { id: 'bengali', nameEn: 'Bengali', nameBn: 'বাংলা', desc: 'সাহিত্য, ব্যাকরণ, রচনা ও নোটস', grad: 'linear-gradient(135deg,#0F172A,#4F46E5)' },
+      { id: 'english', nameEn: 'English', nameBn: 'ইংরেজি', desc: 'Grammar, Comprehension & Literature', grad: 'linear-gradient(135deg,#0F172A,#7C3AED)' },
+      { id: 'physics', nameEn: 'Physics', nameBn: 'পদার্থবিদ্যা', desc: 'Mechanics, Optics & Electricity', grad: 'linear-gradient(135deg,#0F172A,#2563EB)' },
+      { id: 'chemistry', nameEn: 'Chemistry', nameBn: 'রসায়নবিদ্যা', desc: 'Physical, Organic & Inorganic', grad: 'linear-gradient(135deg,#0F172A,#0D9488)' },
+      { id: 'mathematics', nameEn: 'Mathematics', nameBn: 'গণিত', desc: 'Algebra, Calculus & Geometry', grad: 'linear-gradient(135deg,#0F172A,#D97706)' },
+      { id: 'biology', nameEn: 'Biology', nameBn: 'জীববিদ্যা', desc: 'Botany, Zoology & Diagrams', grad: 'linear-gradient(135deg,#0F172A,#059669)' }
+    ];
+    const CATEGORIES = [
+      'Chapter-wise Notes', 'PDF Study Materials', 'Images and Diagrams',
+      'Important Questions', 'Suggestion Questions', 'Previous Year Questions',
+      'Question Papers', 'Other Documents'
+    ];
+    const GK_CATEGORIES = [
+      'Indian General Knowledge', 'World General Knowledge', 'History', 'Geography',
+      'Indian Constitution', 'Science and Technology', 'Sports', 'Current Affairs',
+      'West Bengal General Knowledge', 'Important Personalities', 'Space and Astronomy', 'Environment'
+    ];
+    const QUIZ_BANK = [
+      { category: 'West Bengal General Knowledge', q: 'Which river is known as the lifeline of North Bengal?', opts: ['Teesta', 'Damodar', 'Rupnarayan', 'Subarnarekha'], ans: 0, exp: 'The Teesta River originates in Sikkim and flows through northern West Bengal.' },
+      { category: 'Indian Constitution', q: 'Which Article guarantees the Right to Constitutional Remedies?', opts: ['Article 14', 'Article 19', 'Article 32', 'Article 44'], ans: 2, exp: 'Dr. B.R. Ambedkar called Article 32 the heart and soul of the Indian Constitution.' },
+      { category: 'Science and Technology', q: 'What is the SI unit of electrical resistance?', opts: ['Volt', 'Ohm', 'Ampere', 'Watt'], ans: 1, exp: 'Electrical resistance is measured in Ohms (Ω), named after Georg Simon Ohm.' },
+      { category: 'Space and Astronomy', q: 'Which ISRO mission achieved a soft landing near the lunar south pole in 2023?', opts: ['Chandrayaan-1', 'Chandrayaan-2', 'Chandrayaan-3', 'Mangalyaan'], ans: 2, exp: 'Chandrayaan-3 Vikram lander touched down on August 23, 2023.' },
+      { category: 'Indian General Knowledge', q: 'Who composed the National Anthem of India, Jana Gana Mana?', opts: ['Bankim Chandra Chattopadhyay', 'Rabindranath Tagore', 'Kazi Nazrul Islam', 'Sarojini Naidu'], ans: 1, exp: 'Rabindranath Tagore originally composed it in Bengali in 1911.' }
+    ];
+
+    const state = {
+      student: JSON.parse(localStorage.getItem('dorbar_student') || 'null'),
+      docs: JSON.parse(localStorage.getItem('dorbar_docs') || '[]'),
+      announcements: JSON.parse(localStorage.getItem('dorbar_announcements') || '[{"id":"a1","title":"Welcome to দরবার","body":"Explore all 6 subjects, upload materials in Admin Panel, or try the GK Challenge!","date":"Official Notice"}]'),
+      favorites: JSON.parse(localStorage.getItem('dorbar_favorites') || '[]'),
+      downloads: JSON.parse(localStorage.getItem('dorbar_downloads') || '[]'),
+      quizHistory: JSON.parse(localStorage.getItem('dorbar_quiz_history') || '[]'),
+      adminMode: false,
+      activeTab: 'home',
+      selectedSubjectId: null,
+      selectedCategory: 'ALL'
+    };
+
+    const $ = (id) => document.getElementById(id);
+    function saveState() {
+      localStorage.setItem('dorbar_student', JSON.stringify(state.student));
+      localStorage.setItem('dorbar_docs', JSON.stringify(state.docs));
+      localStorage.setItem('dorbar_announcements', JSON.stringify(state.announcements));
+      localStorage.setItem('dorbar_favorites', JSON.stringify(state.favorites));
+      localStorage.setItem('dorbar_downloads', JSON.stringify(state.downloads));
+      localStorage.setItem('dorbar_quiz_history', JSON.stringify(state.quizHistory));
+    }
+
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
+
+    function initSelects() {
+      [$('docSubjectSelect'), $('docCategorySelect'), $('quizCategorySelect')].forEach(s => s.replaceChildren());
+      SUBJECTS.forEach(s => {
+        const opt = el('option', '', `${s.nameBn} (${s.nameEn})`);
+        opt.value = s.id;
+        $('docSubjectSelect').appendChild(opt);
+      });
+      CATEGORIES.forEach(c => {
+        const opt = el('option', '', c);
+        opt.value = c;
+        $('docCategorySelect').appendChild(opt);
+      });
+      GK_CATEGORIES.forEach(g => {
+        const opt = el('option', '', g);
+        opt.value = g;
+        $('quizCategorySelect').appendChild(opt);
+      });
+    }
+
+    function renderDocRow(doc, isAdmin = false) {
+      const row = el('div', 'doc-item');
+      const left = el('div');
+      const title = el('div', '', doc.title);
+      title.style.fontWeight = '700';
+      const meta = el('div', '', `${doc.subjectName} • ${doc.category} • ${doc.chapter} • ${doc.ext.toUpperCase()} (${doc.downloads || 0} downloads)`);
+      meta.style.fontSize = '0.82rem';
+      meta.style.color = 'var(--text-muted)';
+      left.append(title, meta);
+
+      const right = el('div', 'actions');
+      const viewBtn = el('button', 'btn btn-outline', 'View');
+      viewBtn.type = 'button';
+      viewBtn.onclick = () => openViewer(doc);
+      right.appendChild(viewBtn);
+
+      const dlBtn = el('button', 'btn btn-primary', 'Download');
+      dlBtn.type = 'button';
+      dlBtn.onclick = () => downloadDoc(doc);
+      right.appendChild(dlBtn);
+
+      if (!isAdmin) {
+        const isFav = state.favorites.includes(doc.id);
+        const favBtn = el('button', 'btn btn-outline', isFav ? 'Saved ★' : 'Save ☆');
+        favBtn.type = 'button';
+        favBtn.onclick = () => {
+          state.favorites = isFav ? state.favorites.filter(id => id !== doc.id) : [...state.favorites, doc.id];
+          saveState();
+          renderAll();
+        };
+        right.appendChild(favBtn);
+      } else {
+        const delBtn = el('button', 'btn btn-danger', 'Delete');
+        delBtn.type = 'button';
+        delBtn.onclick = () => {
+          state.docs = state.docs.filter(d => d.id !== doc.id);
+          saveState();
+          renderAll();
+        };
+        right.appendChild(delBtn);
+      }
+      row.append(left, right);
+      return row;
+    }
+
+    function openViewer(doc) {
+      $('viewerTitle').textContent = doc.title;
+      $('viewerMeta').textContent = `${doc.subjectName} • ${doc.category} • ${doc.chapter} • ${doc.fileName}`;
+      const body = $('viewerBody');
+      body.replaceChildren();
+      if (doc.dataUrl && doc.mime.startsWith('image/')) {
+        const img = el('img');
+        img.src = doc.dataUrl;
+        img.alt = doc.title;
+        img.style.width = '100%';
+        img.style.borderRadius = '12px';
+        body.appendChild(img);
+      } else if (doc.textPreview) {
+        const pre = el('pre', '', doc.textPreview);
+        pre.style.whiteSpace = 'pre-wrap';
+        pre.style.background = 'var(--surface-alt)';
+        pre.style.padding = '12px';
+        pre.style.borderRadius = '12px';
+        body.appendChild(pre);
+      } else {
+        body.appendChild(el('p', '', doc.description || 'Click Download File below to save and open this study material.'));
+      }
+      $('viewerDownloadBtn').onclick = () => downloadDoc(doc);
+      $('viewerModal').classList.add('open');
+    }
+
+    function downloadDoc(doc) {
+      doc.downloads = (doc.downloads || 0) + 1;
+      state.downloads.unshift({ id: doc.id, title: doc.title, subjectName: doc.subjectName, date: new Date().toLocaleDateString() });
+      saveState();
+      if (doc.dataUrl) {
+        const a = document.createElement('a');
+        a.href = doc.dataUrl;
+        a.download = doc.fileName;
+        a.click();
+      }
+      renderAll();
+    }
+
+    function renderSubjectsGrid(container) {
+      container.replaceChildren();
+      SUBJECTS.forEach(s => {
+        const card = el('div', 'subject-card');
+        card.style.background = s.grad;
+        const count = state.docs.filter(d => d.subjectId === s.id).length;
+        const pill = el('span', 'pill', `${count} files`);
+        const bn = el('h3', 'bn', s.nameBn);
+        bn.style.fontSize = '1.25rem';
+        const en = el('div', '', s.nameEn);
+        en.style.fontWeight = '600';
+        const desc = el('div', '', s.desc);
+        desc.style.fontSize = '0.8rem';
+        desc.style.opacity = '0.85';
+        card.append(pill, bn, en, desc);
+        card.onclick = () => {
+          state.selectedSubjectId = s.id;
+          state.selectedCategory = 'ALL';
+          switchTab('subjects');
+        };
+        container.appendChild(card);
+      });
+    }
+
+    function switchTab(tab) {
+      state.activeTab = tab;
+      document.querySelectorAll('#studentTabs .tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+      ['home', 'subjects', 'quiz', 'library', 'profile'].forEach(t => {
+        $(`tab-${t}`).classList.toggle('hidden', state.adminMode || t !== tab);
+      });
+      renderAll();
+    }
+
+    function renderAll() {
+      const loggedIn = Boolean(state.student);
+      $('welcomeSection').classList.toggle('hidden', loggedIn);
+      $('appShell').classList.toggle('hidden', !loggedIn);
+      $('workspaceToggle').classList.toggle('hidden', !loggedIn);
+      $('logoutBtn').classList.toggle('hidden', !loggedIn);
+      if (!loggedIn) return;
+
+      $('workspaceToggle').textContent = state.adminMode ? 'Student View' : 'Admin Panel';
+      $('studentTabs').classList.toggle('hidden', state.adminMode);
+      $('adminSection').classList.toggle('hidden', !state.adminMode);
+      ['home', 'subjects', 'quiz', 'library', 'profile'].forEach(t => {
+        $(`tab-${t}`).classList.toggle('hidden', state.adminMode || t !== state.activeTab);
+      });
+
+      $('welcomeHeading').textContent = `নমস্কার / Hello, ${state.student.name}`;
+      $('studentMeta').textContent = `Student ID: ${state.student.id} • Downloads: ${state.downloads.length} • Quizzes: ${state.quizHistory.length}`;
+      $('profileSummary').textContent = `${state.student.name} (${state.student.id}) • ${state.favorites.length} favourites • ${state.downloads.length} downloads`;
+
+      renderSubjectsGrid($('homeSubjectsGrid'));
+      $('announcementsList').replaceChildren(...state.announcements.map(a => {
+        const c = el('div', 'card');
+        c.style.marginBottom = '10px';
+        c.append(el('strong', '', `${a.title} (${a.date})`), el('p', '', a.body));
+        return c;
+      }));
+
+      const recentWrap = $('recentDocsList');
+      recentWrap.replaceChildren();
+      if (state.docs.length === 0) {
+        recentWrap.appendChild(el('div', 'card', 'No documents uploaded yet. Switch to Admin Panel to upload PDFs, images, or notes.'));
+      } else {
+        state.docs.slice(0, 6).forEach(d => recentWrap.appendChild(renderDocRow(d)));
+      }
+
+      if (state.selectedSubjectId) {
+        const subj = SUBJECTS.find(s => s.id === state.selectedSubjectId);
+        $('subjectsOverview').classList.add('hidden');
+        $('subjectDetail').classList.remove('hidden');
+        $('subjectHero').replaceChildren(el('h2', 'bn', `${subj.nameBn} • ${subj.nameEn}`), el('p', '', subj.desc));
+        const chips = $('categoryChips');
+        chips.replaceChildren();
+        ['ALL', ...CATEGORIES].forEach(cat => {
+          const ch = el('button', `chip ${state.selectedCategory === cat ? 'selected' : ''}`, cat === 'ALL' ? 'All Categories' : cat);
+          ch.type = 'button';
+          ch.onclick = () => { state.selectedCategory = cat; renderAll(); };
+          chips.appendChild(ch);
+        });
+        const list = $('subjectDocsList');
+        list.replaceChildren();
+        const filtered = state.docs.filter(d => d.subjectId === subj.id && (state.selectedCategory === 'ALL' || d.category === state.selectedCategory));
+        if (filtered.length === 0) list.appendChild(el('div', 'card', 'No materials in this category yet.'));
+        else filtered.forEach(d => list.appendChild(renderDocRow(d)));
+      } else {
+        $('subjectsOverview').classList.remove('hidden');
+        $('subjectDetail').classList.add('hidden');
+        renderSubjectsGrid($('subjectsOverview'));
+      }
+
+      const favWrap = $('favoritesList');
+      favWrap.replaceChildren();
+      const favDocs = state.docs.filter(d => state.favorites.includes(d.id));
+      if (favDocs.length === 0) favWrap.appendChild(el('p', '', 'No favourite documents saved yet.'));
+      else favDocs.forEach(d => favWrap.appendChild(renderDocRow(d)));
+
+      const dlWrap = $('downloadsList');
+      dlWrap.replaceChildren();
+      if (state.downloads.length === 0) dlWrap.appendChild(el('p', '', 'No downloads yet.'));
+      else state.downloads.slice(0, 12).forEach(dl => dlWrap.appendChild(el('div', 'doc-item', `${dl.title} — ${dl.subjectName} (${dl.date})`)));
+
+      const statsGrid = $('adminStatsGrid');
+      statsGrid.replaceChildren();
+      [
+        ['Documents', state.docs.length],
+        ['Subjects', SUBJECTS.length],
+        ['Categories', CATEGORIES.length],
+        ['Downloads', state.downloads.length]
+      ].forEach(([label, val]) => {
+        const card = el('div', 'card');
+        const num = el('div', '', String(val));
+        num.style.fontSize = '1.6rem';
+        num.style.fontWeight = '700';
+        card.append(num, el('div', '', label));
+        statsGrid.appendChild(card);
+      });
+
+      const adminList = $('adminDocsList');
+      adminList.replaceChildren();
+      if (state.docs.length === 0) adminList.appendChild(el('p', '', 'No uploaded documents yet.'));
+      else state.docs.forEach(d => adminList.appendChild(renderDocRow(d, true)));
+    }
+
+    function startQuiz() {
+      const cat = $('quizCategorySelect').value;
+      const pool = QUIZ_BANK.filter(q => q.category === cat);
+      const questions = pool.length ? pool : QUIZ_BANK;
+      let idx = 0, score = 0;
+      $('quizSetupCard').classList.add('hidden');
+      const arena = $('quizArenaCard');
+      arena.classList.remove('hidden');
+
+      function drawQuestion() {
+        arena.replaceChildren();
+        if (idx >= questions.length) {
+          state.quizHistory.unshift({ category: cat, score, total: questions.length });
+          saveState();
+          arena.append(
+            el('h2', '', `Quiz Complete: ${score} / ${questions.length}`),
+            el('p', '', 'Your score has been saved to your student profile.')
+          );
+          const backBtn = el('button', 'btn btn-primary', 'Back to Quiz Hub');
+          backBtn.type = 'button';
+          backBtn.style.marginTop = '12px';
+          backBtn.onclick = () => { arena.classList.add('hidden'); $('quizSetupCard').classList.remove('hidden'); renderAll(); };
+          arena.appendChild(backBtn);
+          return;
+        }
+        const item = questions[idx];
+        arena.append(el('span', 'badge', `${item.category} • Q${idx + 1}/${questions.length}`), el('h3', '', item.q));
+        let answered = false;
+        const expBox = el('p', '', '');
+        expBox.style.marginTop = '10px';
+        const nextBtn = el('button', 'btn btn-primary hidden', 'Next Question');
+        nextBtn.type = 'button';
+        nextBtn.onclick = () => { idx++; drawQuestion(); };
+
+        item.opts.forEach((optText, optIdx) => {
+          const b = el('button', 'quiz-opt', `${String.fromCharCode(65 + optIdx)}. ${optText}`);
+          b.type = 'button';
+          b.onclick = () => {
+            if (answered) return;
+            answered = true;
+            if (optIdx === item.ans) { score++; b.classList.add('correct'); }
+            else b.classList.add('wrong');
+            expBox.textContent = item.exp;
+            nextBtn.classList.remove('hidden');
+          };
+          arena.appendChild(b);
+        });
+        arena.append(expBox, nextBtn);
+      }
+      drawQuestion();
+    }
+
+    $('loginForm').onsubmit = (e) => {
+      e.preventDefault();
+      const name = $('studentNameInput').value.trim();
+      if (name.length < 2) return;
+      state.student = { id: 'DRB-' + Math.floor(100000 + Math.random() * 900000), name };
+      saveState();
+      renderAll();
+    };
+    $('renameForm').onsubmit = (e) => {
+      e.preventDefault();
+      const name = $('renameInput').value.trim();
+      if (name.length < 2 || !state.student) return;
+      state.student.name = name;
+      saveState();
+      $('renameInput').value = '';
+      renderAll();
+    };
+    $('uploadDocForm').onsubmit = (e) => {
+      e.preventDefault();
+      const file = $('docFileInput').files[0];
+      if (!file) return;
+      const subj = SUBJECTS.find(s => s.id === $('docSubjectSelect').value);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const ext = file.name.split('.').pop() || 'file';
+        const doc = {
+          id: 'doc_' + Date.now(),
+          title: $('docTitleInput').value.trim(),
+          subjectId: subj.id,
+          subjectName: subj.nameEn,
+          category: $('docCategorySelect').value,
+          chapter: $('docChapterInput').value.trim(),
+          description: $('docDescInput').value.trim(),
+          fileName: file.name,
+          mime: file.type || 'application/octet-stream',
+          ext,
+          dataUrl: reader.result,
+          downloads: 0
+        };
+        state.docs.unshift(doc);
+        saveState();
+        $('uploadDocForm').reset();
+        renderAll();
+      };
+      reader.readAsDataURL(file);
+    };
+    $('announcementForm').onsubmit = (e) => {
+      e.preventDefault();
+      state.announcements.unshift({
+        id: 'ann_' + Date.now(),
+        title: $('annTitleInput').value.trim(),
+        body: $('annBodyInput').value.trim(),
+        date: new Date().toLocaleDateString()
+      });
+      saveState();
+      $('announcementForm').reset();
+      renderAll();
+    };
+    $('globalSearch').oninput = (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      $('searchResultsWrap').classList.toggle('hidden', !q);
+      const list = $('searchResultsList');
+      list.replaceChildren();
+      if (!q) return;
+      const matches = state.docs.filter(d =>
+        d.title.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || d.chapter.toLowerCase().includes(q)
+      );
+      if (matches.length === 0) list.appendChild(el('p', '', 'No matching study documents.'));
+      else matches.forEach(d => list.appendChild(renderDocRow(d)));
+    };
+    $('exportCsvBtn').onclick = () => {
+      const rows = ['Title,Subject,Category,Chapter,Downloads', ...state.docs.map(d => `"${d.title.replace(/"/g, "'")}","${d.subjectName}","${d.category}","${d.chapter}",${d.downloads || 0}`)];
+      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'dorbar_analytics.csv';
+      a.click();
+    };
+    document.querySelectorAll('#studentTabs .tab-btn').forEach(b => b.onclick = () => {
+      state.selectedSubjectId = null;
+      switchTab(b.dataset.tab);
+    });
+    $('backToSubjectsBtn').onclick = () => { state.selectedSubjectId = null; renderAll(); };
+    $('bannerQuizBtn').onclick = () => switchTab('quiz');
+    $('startQuizBtn').onclick = startQuiz;
+    $('closeViewerBtn').onclick = () => $('viewerModal').classList.remove('open');
+    $('workspaceToggle').onclick = () => { state.adminMode = !state.adminMode; renderAll(); };
+    $('themeToggle').onclick = () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+    };
+    $('logoutBtn').onclick = () => { state.student = null; state.adminMode = false; saveState(); renderAll(); };
+
+    initSelects();
+    renderAll();
+  </script>
+</body>
+</html>

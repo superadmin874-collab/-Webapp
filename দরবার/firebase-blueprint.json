@@ -1,0 +1,413 @@
+{
+  "entities": {
+    "AdminAccount": {
+      "title": "AdminAccount",
+      "description": "Administrator record with role-based permissions and status.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID of the administrator." },
+        "email": { "type": "string", "description": "Verified lowercase email address." },
+        "displayName": { "type": "string", "description": "Administrator display name." },
+        "role": { "type": "string", "enum": ["SUPER_ADMIN", "ADMINISTRATOR", "MODERATOR"] },
+        "active": { "type": "boolean", "description": "Whether the administrator account is active." },
+        "permissions": { "type": "array", "description": "Assigned permission keys (max 20)." },
+        "createdByUid": { "type": "string" },
+        "adminUids": { "type": "array", "description": "Bounded list of admin UIDs for collaborative queries." },
+        "lastLoginAt": { "type": "string", "format": "date-time", "description": "Must be FieldValue.serverTimestamp()" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Must be FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Must be FieldValue.serverTimestamp()" }
+      },
+      "required": ["uid", "email", "displayName", "role", "active", "permissions", "createdByUid", "adminUids", "createdAt", "updatedAt"]
+    },
+    "AdminInvite": {
+      "title": "AdminInvite",
+      "description": "Super Admin invitation allowing a verified Google account to activate an admin role.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["SUPER_ADMIN", "ADMINISTRATOR", "MODERATOR"] },
+        "permissions": { "type": "array" },
+        "active": { "type": "boolean" },
+        "claimedUid": { "type": "string" },
+        "createdByUid": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "displayName", "role", "permissions", "active", "createdByUid", "adminUids", "createdAt", "updatedAt"]
+    },
+    "SubjectItem": {
+      "title": "SubjectItem",
+      "description": "One of the educational subjects in Dorbar.",
+      "type": "object",
+      "properties": {
+        "nameEn": { "type": "string" },
+        "nameBn": { "type": "string" },
+        "description": { "type": "string" },
+        "iconKey": { "type": "string" },
+        "accentHex": { "type": "string" },
+        "sortOrder": { "type": "integer" },
+        "visible": { "type": "boolean" },
+        "createdByUid": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["nameEn", "nameBn", "description", "iconKey", "accentHex", "sortOrder", "visible", "createdByUid", "adminUids", "createdAt", "updatedAt"]
+    },
+    "CategoryItem": {
+      "title": "CategoryItem",
+      "description": "Study material category within a subject or across all subjects.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "visible": { "type": "boolean" },
+        "sortOrder": { "type": "integer" },
+        "createdByUid": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "subjectId", "visible", "sortOrder", "createdByUid", "adminUids", "createdAt", "updatedAt"]
+    },
+    "StudyDocument": {
+      "title": "StudyDocument",
+      "description": "Educational PDF, image, or office document metadata with versioning and download counter.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "categoryName": { "type": "string" },
+        "chapter": { "type": "string" },
+        "fileName": { "type": "string" },
+        "mimeType": { "type": "string" },
+        "fileExtension": { "type": "string" },
+        "fileSizeBytes": { "type": "integer" },
+        "chunkCount": { "type": "integer" },
+        "tags": { "type": "array" },
+        "featured": { "type": "boolean" },
+        "published": { "type": "boolean" },
+        "version": { "type": "integer" },
+        "downloadCount": { "type": "integer" },
+        "uploadedByUid": { "type": "string" },
+        "uploadedByName": { "type": "string" },
+        "lastEditedByUid": { "type": "string" },
+        "lastEditedByName": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "subjectId", "subjectName", "categoryId", "categoryName", "chapter", "fileName", "mimeType", "fileExtension", "fileSizeBytes", "chunkCount", "tags", "featured", "published", "version", "downloadCount", "uploadedByUid", "uploadedByName", "lastEditedByUid", "lastEditedByName", "adminUids", "createdAt", "updatedAt"]
+    },
+    "DocumentChunk": {
+      "title": "DocumentChunk",
+      "description": "Base64-encoded chunk of a stored educational document.",
+      "type": "object",
+      "properties": {
+        "documentId": { "type": "string" },
+        "chunkIndex": { "type": "integer" },
+        "dataBase64": { "type": "string" },
+        "published": { "type": "boolean" },
+        "uploadedByUid": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["documentId", "chunkIndex", "dataBase64", "published", "uploadedByUid", "adminUids", "createdAt"]
+    },
+    "DocumentVersion": {
+      "title": "DocumentVersion",
+      "description": "Historical snapshot metadata for a study document.",
+      "type": "object",
+      "properties": {
+        "documentId": { "type": "string" },
+        "version": { "type": "integer" },
+        "title": { "type": "string" },
+        "fileName": { "type": "string" },
+        "fileSizeBytes": { "type": "integer" },
+        "changeNote": { "type": "string" },
+        "editedByUid": { "type": "string" },
+        "editedByName": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["documentId", "version", "title", "fileName", "fileSizeBytes", "changeNote", "editedByUid", "editedByName", "adminUids", "createdAt"]
+    },
+    "StudentProfile": {
+      "title": "StudentProfile",
+      "description": "Private student profile keyed by Firebase UID with a unique Student Code and name-only identity.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "studentCode": { "type": "string" },
+        "fullName": { "type": "string" },
+        "active": { "type": "boolean" },
+        "downloadCount": { "type": "integer" },
+        "quizAttemptsCount": { "type": "integer" },
+        "totalQuizScore": { "type": "integer" },
+        "totalQuizQuestions": { "type": "integer" },
+        "bestStreak": { "type": "integer" },
+        "achievements": { "type": "array" },
+        "lastActiveAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "studentCode", "fullName", "active", "downloadCount", "quizAttemptsCount", "totalQuizScore", "totalQuizQuestions", "bestStreak", "achievements", "lastActiveAt", "createdAt", "updatedAt"]
+    },
+    "FavoriteRecord": {
+      "title": "FavoriteRecord",
+      "description": "Student's bookmarked study material.",
+      "type": "object",
+      "properties": {
+        "documentId": { "type": "string" },
+        "title": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "fileExtension": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["documentId", "title", "subjectId", "subjectName", "fileExtension", "createdAt"]
+    },
+    "DownloadRecord": {
+      "title": "DownloadRecord",
+      "description": "Student's personal download history item.",
+      "type": "object",
+      "properties": {
+        "documentId": { "type": "string" },
+        "title": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "fileName": { "type": "string" },
+        "mimeType": { "type": "string" },
+        "fileExtension": { "type": "string" },
+        "fileSizeBytes": { "type": "integer" },
+        "localPath": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["documentId", "title", "subjectId", "subjectName", "fileName", "mimeType", "fileExtension", "fileSizeBytes", "localPath", "createdAt"]
+    },
+    "QuizAttempt": {
+      "title": "QuizAttempt",
+      "description": "Student's completed GK quiz attempt record.",
+      "type": "object",
+      "properties": {
+        "category": { "type": "string" },
+        "difficulty": { "type": "string" },
+        "mode": { "type": "string" },
+        "totalQuestions": { "type": "integer" },
+        "correctAnswers": { "type": "integer" },
+        "scorePercent": { "type": "integer" },
+        "timeSpentSeconds": { "type": "integer" },
+        "studentName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["category", "difficulty", "mode", "totalQuestions", "correctAnswers", "scorePercent", "timeSpentSeconds", "studentName", "createdAt"]
+    },
+    "StudentNotification": {
+      "title": "StudentNotification",
+      "description": "In-app notification delivered to a student.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "type": { "type": "string" },
+        "read": { "type": "boolean" },
+        "targetId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "body", "type", "read", "targetId", "createdAt"]
+    },
+    "StudentDirectoryEntry": {
+      "title": "StudentDirectoryEntry",
+      "description": "Admin-manageable non-PII summary record for a student.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "studentCode": { "type": "string" },
+        "displayName": { "type": "string" },
+        "active": { "type": "boolean" },
+        "downloadCount": { "type": "integer" },
+        "quizAttemptsCount": { "type": "integer" },
+        "averageScorePercent": { "type": "integer" },
+        "bestScorePercent": { "type": "integer" },
+        "totalPoints": { "type": "integer" },
+        "adminUids": { "type": "array" },
+        "lastActiveAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "studentCode", "displayName", "active", "downloadCount", "quizAttemptsCount", "averageScorePercent", "bestScorePercent", "totalPoints", "adminUids", "lastActiveAt", "createdAt", "updatedAt"]
+    },
+    "QuizQuestion": {
+      "title": "QuizQuestion",
+      "description": "General Knowledge multiple-choice question (AI-generated or admin-created).",
+      "type": "object",
+      "properties": {
+        "category": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["EASY", "MEDIUM", "HARD"] },
+        "questionText": { "type": "string" },
+        "options": { "type": "array" },
+        "correctIndex": { "type": "integer" },
+        "explanation": { "type": "string" },
+        "sourceNote": { "type": "string" },
+        "aiGenerated": { "type": "boolean" },
+        "approved": { "type": "boolean" },
+        "createdByUid": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["category", "difficulty", "questionText", "options", "correctIndex", "explanation", "sourceNote", "aiGenerated", "approved", "createdByUid", "adminUids", "createdAt", "updatedAt"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Official notice or announcement published by administrators.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "pinned": { "type": "boolean" },
+        "published": { "type": "boolean" },
+        "attachmentDocId": { "type": "string" },
+        "attachmentFileName": { "type": "string" },
+        "attachmentMimeType": { "type": "string" },
+        "publishDateLabel": { "type": "string" },
+        "createdByUid": { "type": "string" },
+        "createdByName": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "body", "pinned", "published", "publishDateLabel", "createdByUid", "createdByName", "adminUids", "createdAt", "updatedAt"]
+    },
+    "AdminActivityLog": {
+      "title": "AdminActivityLog",
+      "description": "Audit trail entry for administrative actions.",
+      "type": "object",
+      "properties": {
+        "adminUid": { "type": "string" },
+        "adminName": { "type": "string" },
+        "actionType": { "type": "string" },
+        "summary": { "type": "string" },
+        "targetId": { "type": "string" },
+        "adminUids": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["adminUid", "adminName", "actionType", "summary", "targetId", "adminUids", "createdAt"]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "Global application settings controlled by administrators.",
+      "type": "object",
+      "properties": {
+        "appName": { "type": "string" },
+        "tagline": { "type": "string" },
+        "defaultThemeMode": { "type": "string", "enum": ["SYSTEM", "LIGHT", "DARK"] },
+        "maxUploadSizeMb": { "type": "integer" },
+        "allowStudentQuiz": { "type": "boolean" },
+        "allowStudentDownloads": { "type": "boolean" },
+        "dailyChallengeEnabled": { "type": "boolean" },
+        "notificationsEnabled": { "type": "boolean" },
+        "maintenanceMode": { "type": "boolean" },
+        "updatedByUid": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["appName", "tagline", "defaultThemeMode", "maxUploadSizeMb", "allowStudentQuiz", "allowStudentDownloads", "dailyChallengeEnabled", "notificationsEnabled", "maintenanceMode", "updatedByUid", "updatedAt"]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Public student ranking entry for AI GK Challenge.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "studentCode": { "type": "string" },
+        "displayName": { "type": "string" },
+        "totalPoints": { "type": "integer" },
+        "quizzesCompleted": { "type": "integer" },
+        "averageScorePercent": { "type": "integer" },
+        "dailyPoints": { "type": "integer" },
+        "dailyDateKey": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "studentCode", "displayName", "totalPoints", "quizzesCompleted", "averageScorePercent", "dailyPoints", "dailyDateKey", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/AdminAccount" },
+      "description": "Administrator accounts and role permissions."
+    },
+    "/admin_invites/{inviteId}": {
+      "schema": { "$ref": "#/entities/AdminInvite" },
+      "description": "Super Admin invitations for secondary administrators."
+    },
+    "/subjects/{subjectId}": {
+      "schema": { "$ref": "#/entities/SubjectItem" },
+      "description": "Six core subjects managed by administrators."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/CategoryItem" },
+      "description": "Subject-wise and global study material categories."
+    },
+    "/documents/{docId}": {
+      "schema": { "$ref": "#/entities/StudyDocument" },
+      "description": "Published and draft study document metadata."
+    },
+    "/document_chunks/{chunkId}": {
+      "schema": { "$ref": "#/entities/DocumentChunk" },
+      "description": "Chunked binary content for uploaded documents."
+    },
+    "/document_versions/{versionId}": {
+      "schema": { "$ref": "#/entities/DocumentVersion" },
+      "description": "Version history records for study documents."
+    },
+    "/students/{studentUid}": {
+      "schema": { "$ref": "#/entities/StudentProfile" },
+      "description": "Private student profile isolated to the student's Firebase UID."
+    },
+    "/students/{studentUid}/favorites/{docId}": {
+      "schema": { "$ref": "#/entities/FavoriteRecord" },
+      "description": "Student's favourite documents."
+    },
+    "/students/{studentUid}/downloads/{downloadId}": {
+      "schema": { "$ref": "#/entities/DownloadRecord" },
+      "description": "Student's download history."
+    },
+    "/students/{studentUid}/quiz_attempts/{attemptId}": {
+      "schema": { "$ref": "#/entities/QuizAttempt" },
+      "description": "Student's quiz history and scores."
+    },
+    "/students/{studentUid}/notifications/{notifId}": {
+      "schema": { "$ref": "#/entities/StudentNotification" },
+      "description": "Student's personal notification inbox."
+    },
+    "/student_directory/{studentUid}": {
+      "schema": { "$ref": "#/entities/StudentDirectoryEntry" },
+      "description": "Non-PII student summary records for admin management."
+    },
+    "/quiz_questions/{questionId}": {
+      "schema": { "$ref": "#/entities/QuizQuestion" },
+      "description": "Curated and AI-generated General Knowledge questions."
+    },
+    "/announcements/{announcementId}": {
+      "schema": { "$ref": "#/entities/Announcement" },
+      "description": "Pinned and published announcements."
+    },
+    "/activity_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AdminActivityLog" },
+      "description": "Searchable audit log of administrative actions."
+    },
+    "/app_settings/global": {
+      "schema": { "$ref": "#/entities/AppSettings" },
+      "description": "Global application settings managed by administrators."
+    },
+    "/leaderboard/{studentUid}": {
+      "schema": { "$ref": "#/entities/LeaderboardEntry" },
+      "description": "AI GK Challenge leaderboard and daily rankings."
+    }
+  }
+}

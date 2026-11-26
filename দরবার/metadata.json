@@ -1,0 +1,6 @@
+{
+  "name": "দরবার",
+  "description": "Your Digital Learning & Knowledge Hub — educational document-sharing, multi-admin control panel, and AI General Knowledge Quiz platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
